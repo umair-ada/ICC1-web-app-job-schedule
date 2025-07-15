@@ -2,13 +2,13 @@
 
 ## Tech Stack & Setup
 
-This repository contains a sample Flask web application, "BritEdge Job Management," designed for students to explore flexible cloud deployment strategies. The application allows users to log in, create, track, and manage job entries (e.g., deliveries, engineering tasks). It's built to demonstrate database flexibility and possible containerisation for various cloud configurations.
+This repository contains a sample Flask web application, "BritEdge Job Management," designed to allow you to explore flexible cloud deployment strategies. The application allows users to log in, create, track, and manage job entries (e.g., deliveries, engineering tasks). It's built to demonstrate database flexibility and possible containerisation for various cloud configurations.
 
 ## How to use this in the cloud?
 
 * Run on a virtual machine with the inbuilt SQLite database
 * Run on a virtual machine with a separate database instance (e.g. PostRes SQL or Cosmos DB NoSQL)
-* 
+* Maybe use Storage services if you wish to store static assets
 
 ### Key Technologies
 
@@ -65,35 +65,7 @@ SECRET_KEY='your_strong_random_secret_key_here'
 
 **Note:** The `.env` file should be excluded from version control using `.gitignore` to prevent sensitive information from being committed. When deploying to cloud environments, these variables should be configured as secure application settings or secrets within the cloud platform (e.g., Azure App Service Configuration, Kubernetes Secrets).
 
-## Building and Running with Docker
 
-Ensure Docker is installed on your system.
-
-1.  **Build the Docker image:**
-    Navigate to the root of the `britedge_app` directory.
-    ```bash
-    docker build -t britedge-app .
-    ```
-
-2.  **Run the container:**
-    You need to pass the environment variables to the container.
-
-    * **Using SQLite (default, self-contained):**
-        ```bash
-        docker run -p 8080:8080 -e SECRET_KEY='your_docker_secret_key' britedge-app
-        ```
-        This will create a `site.db` file *inside the container*. For persistent data, you would need to use Docker volumes.
-
-    * **Connecting to an external PostgreSQL or Azure Cosmos DB (PostgreSQL API):**
-        ```bash
-        docker run -p 8080:8080 \
-            -e SECRET_KEY='your_docker_secret_key' \
-            -e DATABASE_URL='postgresql://<user>:<password>@<host>:<port>/<database_name>' \
-            britedge-app
-        ```
-        Replace the `DATABASE_URL` with your actual external database connection string.
-
-The application will be accessible in your browser at `http://localhost:8080` when run via Docker.
 
 ## Running Locally (Without Docker)
 
@@ -135,6 +107,35 @@ If you prefer to run the application directly on your machine without Docker:
     flask run --port 5000
     ```
 
-## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details (if applicable).
+# Optional
+
+## Building and Running with Docker
+
+Ensure Docker is installed on your system.
+
+1.  **Build the Docker image:**
+    Navigate to the root of the `britedge_app` directory.
+    ```bash
+    docker build -t britedge-app .
+    ```
+
+2.  **Run the container:**
+    You need to pass the environment variables to the container.
+
+    * **Using SQLite (default, self-contained):**
+        ```bash
+        docker run -p 8080:8080 -e SECRET_KEY='your_docker_secret_key' britedge-app
+        ```
+        This will create a `site.db` file *inside the container*. For persistent data, you would need to use Docker volumes.
+
+    * **Connecting to an external PostgreSQL or Azure Cosmos DB (PostgreSQL API):**
+        ```bash
+        docker run -p 8080:8080 \
+            -e SECRET_KEY='your_docker_secret_key' \
+            -e DATABASE_URL='postgresql://<user>:<password>@<host>:<port>/<database_name>' \
+            britedge-app
+        ```
+        Replace the `DATABASE_URL` with your actual external database connection string.
+
+The application will be accessible in your browser at `http://localhost:8080` when run via Docker.
