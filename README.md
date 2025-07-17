@@ -8,6 +8,8 @@ This repository contains a sample Flask web application, "BritEdge Job Managemen
 
 * Run on a virtual machine with the inbuilt SQLite database
 * Run on a virtual machine with a separate database instance (e.g. PostRes SQL or Cosmos DB NoSQL)
+* Run on some App running service?
+* Make a container and run instance(s) of a container?
 * Maybe use Storage services if you wish to store static assets
 
 ### Key Technologies
