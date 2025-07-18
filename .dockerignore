@@ -10,3 +10,4 @@ instance/
 .gitignore
 .DS_Store
 .vscode/
+ICCwebapp/
