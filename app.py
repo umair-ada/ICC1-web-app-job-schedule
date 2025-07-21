@@ -43,5 +43,5 @@ if __name__ == '__main__':
     # Run the Flask application
     # debug=True allows for automatic reloading on code changes and provides a debugger.
     # IMPORTANT: debug=True should NEVER be used in a production environment.
-    app.run(debug=True, port=8080)
+    app.run(host='0.0.0.0', debug=False, port=8080)
 
