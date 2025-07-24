@@ -4,6 +4,7 @@ from config import Config
 from extensions import db, login_manager
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,8 +41,5 @@ def inject_now():
     return {'now': datetime.now(timezone.utc)}
 
 if __name__ == '__main__':
-    # Run the Flask application
-    # debug=True allows for automatic reloading on code changes and provides a debugger.
-    # IMPORTANT: debug=True should NEVER be used in a production environment.
-    app.run(debug=True, port=8080)
-
+    port = int(os.environ.get('PORT', 8080))
+    app.run(debug=False, host='0.0.0.0', port=port)
