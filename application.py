@@ -9,6 +9,10 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+if os.environ.get('APPLICATIONINSIGHTS_CONNECTION_STRING'):
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    configure_azure_monitor()
+
 # Initialise Flask application
 app = Flask(__name__)
 # Load configuration from Config class

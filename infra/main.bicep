@@ -1,25 +1,25 @@
 targetScope = 'subscription'
 
-@description('Azure region for all resources — must be in the Azure for Students allowed regions policy.')
+@description('Azure region for all resources.')
 param location string = 'francecentral'
 
 @description('Short prefix for all resource names.')
 param namePrefix string = 'britedge'
 
-@description('Environment tag — dev / staging / prod. Affects resource names.')
+@description('Environment tag.')
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'dev'
 
 @description('Postgres admin username.')
 param pgAdminLogin string = 'britedgeadmin'
 
-@description('Postgres admin password. Supply via bicepparam or CLI --parameters. Rotated via Key Vault after Phase 3.')
+@description('Postgres admin password.')
 @secure()
 @minLength(16)
 param pgAdminPassword string
 
-@description('Initial container image for the Container App. Kept as public hello-world until the first ACR build succeeds; swapped in Phase 1 step 3 via az containerapp update.')
-param initialAppImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+@description('Container image the CA runs.')
+param appImage string = ''
 
 var rgName = '${namePrefix}-${environment}-rg'
 var resourceToken = substring(uniqueString(subscription().id, rgName), 0, 8)
@@ -111,7 +111,9 @@ module containerApp 'modules/containerapp.bicep' = {
     infrastructureSubnetId: network.outputs.containerAppsSubnetId
     logAnalyticsWorkspaceId: observability.outputs.logAnalyticsWorkspaceId
     appInsightsConnectionString: observability.outputs.appInsightsConnectionString
-    initialImage: initialAppImage
+    acrLoginServer: acr.outputs.loginServer
+    keyVaultUri: keyvault.outputs.uri
+    appImage: empty(appImage) ? '${acr.outputs.loginServer}/britedge:latest' : appImage
     tags: tags
   }
 }
@@ -121,6 +123,15 @@ module acrPull 'modules/acrPull.bicep' = {
   name: 'acrPullForContainerApp'
   params: {
     acrName: acr.outputs.name
+    principalId: containerApp.outputs.principalId
+  }
+}
+
+module kvSecretsUser 'modules/kvSecretsUser.bicep' = {
+  scope: rg
+  name: 'kvSecretsUserForContainerApp'
+  params: {
+    keyVaultName: keyvault.outputs.name
     principalId: containerApp.outputs.principalId
   }
 }

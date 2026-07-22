@@ -15,14 +15,17 @@ param infrastructureSubnetId string
 @description('Resource ID of the Log Analytics workspace backing the environment.')
 param logAnalyticsWorkspaceId string
 
-@description('App Insights connection string — surfaced to the app via APPLICATIONINSIGHTS_CONNECTION_STRING.')
+@description('App Insights connection string.')
 param appInsightsConnectionString string
 
-@description('Initial image the Container App runs. Public hello-world at first deploy; CI/CD swaps to the ACR image later.')
-param initialImage string
+@description('ACR login server (e.g. britedgeacr...azurecr.io).')
+param acrLoginServer string
 
-@description('Target port the container listens on. Hello-world bootstrap image uses 80; the Flask app uses 8080. Swapped by build-and-deploy-app.sh at the same time as the image.')
-param initialTargetPort int = 80
+@description('Key Vault URI (https://<name>.vault.azure.net/).')
+param keyVaultUri string
+
+@description('Container image the CA runs.')
+param appImage string = '${acrLoginServer}/britedge:latest'
 
 @description('Resource tags.')
 param tags object
@@ -71,7 +74,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       activeRevisionsMode: 'Multiple'
       ingress: {
         external: true
-        targetPort: initialTargetPort
+        targetPort: 8080
         transport: 'auto'
         allowInsecure: false
         traffic: [
@@ -81,12 +84,30 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           }
         ]
       }
+      registries: [
+        {
+          server: acrLoginServer
+          identity: 'system'
+        }
+      ]
+      secrets: [
+        {
+          name: 'flask-secret-key'
+          keyVaultUrl: '${keyVaultUri}secrets/flask-secret-key'
+          identity: 'system'
+        }
+        {
+          name: 'database-url'
+          keyVaultUrl: '${keyVaultUri}secrets/database-url'
+          identity: 'system'
+        }
+      ]
     }
     template: {
       containers: [
         {
           name: 'app'
-          image: initialImage
+          image: appImage
           resources: {
             cpu: json('0.5')
             memory: '1.0Gi'
@@ -95,6 +116,38 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               value: appInsightsConnectionString
+            }
+            {
+              name: 'PORT'
+              value: '8080'
+            }
+            {
+              name: 'SECRET_KEY'
+              secretRef: 'flask-secret-key'
+            }
+            {
+              name: 'DATABASE_URL'
+              secretRef: 'database-url'
+            }
+          ]
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/healthz'
+                port: 8080
+              }
+              initialDelaySeconds: 15
+              periodSeconds: 30
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/healthz'
+                port: 8080
+              }
+              initialDelaySeconds: 5
+              periodSeconds: 10
             }
           ]
         }
