@@ -5,6 +5,10 @@ from models import User, Job # Import User and Job models
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 
+@app.route("/healthz")
+def healthz():
+    return "ok", 200
+
 @app.route("/")
 @app.route("/home")
 def home():
