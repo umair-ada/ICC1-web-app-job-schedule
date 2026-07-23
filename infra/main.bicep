@@ -21,6 +21,15 @@ param pgAdminPassword string
 @description('Container image the CA runs.')
 param appImage string = ''
 
+@description('Email addresses that receive Azure Budget alerts.')
+param budgetContactEmails array = ['umair.masood@ada.ac.uk']
+
+@description('Custom hostname bound to the Container App. Requires the DNS + managed cert to exist first.')
+param customHostname string = 'app.icc1.dev'
+
+@description('Name of the existing managed certificate in the CA environment.')
+param managedCertificateName string = 'mc-britedge-cae-d-app-icc1-dev-9527'
+
 var rgName = '${namePrefix}-${environment}-rg'
 var resourceToken = substring(uniqueString(subscription().id, rgName), 0, 8)
 
@@ -114,6 +123,8 @@ module containerApp 'modules/containerapp.bicep' = {
     acrLoginServer: acr.outputs.loginServer
     keyVaultUri: keyvault.outputs.uri
     appImage: empty(appImage) ? '${acr.outputs.loginServer}/britedge:latest' : appImage
+    customHostname: customHostname
+    managedCertificateName: managedCertificateName
     tags: tags
   }
 }
@@ -133,6 +144,19 @@ module kvSecretsUser 'modules/kvSecretsUser.bicep' = {
   params: {
     keyVaultName: keyvault.outputs.name
     principalId: containerApp.outputs.principalId
+  }
+}
+
+module budget 'modules/budget.bicep' = {
+  scope: rg
+  name: 'budget'
+  params: {
+    budgetName: '${namePrefix}-monthly'
+    amount: 100
+    contactEmails: budgetContactEmails
+    thresholds: [30, 50, 70]
+    startDate: '2026-07-01T00:00:00Z'
+    endDate: '2027-06-30T00:00:00Z'
   }
 }
 

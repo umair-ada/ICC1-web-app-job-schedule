@@ -27,6 +27,12 @@ param keyVaultUri string
 @description('Container image the CA runs.')
 param appImage string = '${acrLoginServer}/britedge:latest'
 
+@description('Custom hostname to bind to the CA (leave empty on fresh deploys).')
+param customHostname string = ''
+
+@description('Managed certificate name in the CA environment for the custom hostname.')
+param managedCertificateName string = ''
+
 @description('Resource tags.')
 param tags object
 
@@ -81,6 +87,13 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           {
             latestRevision: true
             weight: 100
+          }
+        ]
+        customDomains: empty(customHostname) || empty(managedCertificateName) ? [] : [
+          {
+            name: customHostname
+            bindingType: 'SniEnabled'
+            certificateId: '${env.id}/managedCertificates/${managedCertificateName}'
           }
         ]
       }
